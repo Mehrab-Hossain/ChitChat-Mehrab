@@ -1,0 +1,56 @@
+.has-fade {
+  visibility: hidden;
+}
+@keyframes fade-in {
+  from {
+    visibility: hidden;
+    opacity: 0;
+  }
+  1% {
+    visibility: visible;
+    opacity: 0;
+  }
+
+  to {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+.fade-in {
+  animation: fade-in 300ms ease-in-out forwards;
+}
+@keyframes fade-out {
+  from {
+    visibility: visible;
+    opacity: 1;
+  }
+  99% {
+    visibility: visible;
+    opacity: 0;
+  }
+
+  to {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+.fade-out {
+  animation: fade-out 300ms ease-in-out forwards;
+}
+
+@keyframes slide {
+  0% {
+    background-image: url("/images/145278576_2869564823328835_1927008337045436043_n\ \(1\).jpg");
+  }
+  35% {
+    background-image: url("/images/slider_1.jpg");
+  }
+  75% {
+    background-image: url("/images/slider_3.jpg");
+  }
+}
+.slide {
+  background-size: cover;
+  animation: slide 10s infinite;
+  transition: 600ms;
+}

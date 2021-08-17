@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/dist/toastify.css" />
+    <link rel="stylesheet" href="/dist/style.css" />
+    <script src="/js/moment.js"></script>
+    <script src="/js/toastify.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"
+      integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p"
+      crossorigin="anonymous"
+    />
+    <title><%= title %></title>
+  </head>
+  <body>
+    <div class="dashboard container-dashboard" id="dashboard">
+      <!--dashbord-menu starts-->
+      <div class="dashboard__menu">
+        <div class="dashboard__avatar dashboard__menu-item">
+          <img src="/images/users/<%= user.photo %>" class="dashboard__user-photo" alt="user photo of" />
+        </div>
+        <div class="dashboard__menu-item in-active-menubutton"><i class="fas fa-plus-circle" onclick="createRoomPopUP()"></i></div>
+        <div class="dashboard__menu-item in-active-menubutton"><i class="far fa-envelope-open"></i></div>
+        <% if(user.lastNotificationCheck < user.lastNotificationGet) { %>
+        <div class="dashboard__menu-item in-active-menubutton" id="bell"><i class="far fa-bell" onclick="openNotification()"></i></div>
+        <% } else{ %>
+        <div class="dashboard__menu-item active-menubutton" id="bell"><i class="far fa-bell" onclick="openNotification()"></i></div>
+        <% } %>
+        <div class="dashboard__menu-item in-active-menubutton"><i class="fas fa-cog"></i></div>
+        <div class="dashboard__menu-item in-active-menubutton"><i class="fas fa-sign-out-alt" onclick="logout()" action="/users/logout" method="GET"></i></div>
+      </div>
+      <!--dashbord-menu ends-->
+
+      <!--dashbord-rooms starts-->
+      <div class="dashboard__rooms">
+        <div class="dashboard__search">
+          <form action="" class="dashboard__form-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="search room by room name" name="room" id="room" autocomplete="off" />
+            <p class="error error-search-room"></p>
+          </form>
+        </div>
+
+        <div class="dashboard__room-names" id="room-names">
+          <% user.rooms.forEach(function(room){ %>
+          <div class="dashboard__room-info" id="room-<%=room._id %>" onclick="openInboxModal('<%= room._id%>')">
+            <div class="dashboard__room-details">
+              <div class="dashboard__room-logo">
+                <img src="/images/rooms/<%= room.roomlogo %>" class="dashboard__room-photo" alt="user photo of" />
+              </div>
+              <div class="dashboard__room-head">
+                <h4 id="room-name-<%= room._id%>"><%= room.name %></h4>
+                <div class="dashboard__room__head-info">
+                  <p id="room-slug-<%= room._id%>">Msg: <%= room.slug %></p>
+                  <p id="room-updateTime-<%= room._id%>"><%= moment(room.updatedAt).fromNow() %></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% }); %>
+          <div class="dashboard__search_result"></div>
+        </div>
+
+        <div class="dashboard__room-form">
+          <form class="dashboard__room-form-content" method="POST" action="/rooms/addnewUserInRoom" enctype="application/x-www-form-urlencoded" id="add-new-room-member">
+            <input type="text" class="text-input" name="roomCode" placeholder="type your room code..." id="roomCode" />
+            <button type="submit" value="submit">Join</button>
+          </form>
+          <p class="error roomCode-error"></p>
+          <p class="error common-error"></p>
+        </div>
+      </div>
+
+      <!--dashbord-rooms end-->
+
+      <!--dashbord-chatbox starts-->
+
+      <div class="dashboard__chatbox" id="chatbox">
+        <!--chat box messing contennt-->
+        <div class="dashboard__messsage__content"></div>
+        <!--chat box room profile infos-->
+      </div>
+      <!--dashbord-chatbox ends-->
+    </div>
+
+    <!--sending invitation-->
+    <div class="dashboard__chatbox-sendRequest" id="send-room-invitations">
+      <div class="dashboard__sendRequest-content">
+        <i class="fas fa-times createRoom__createRoomClose" onclick="inviteRoomClosePopClose()"></i>
+        <h1>Send Invitation To Join in Your Room!</h1>
+        <form action="" class="dashboard__form-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="search room by room name" name="user" id="user" autocomplete="off" />
+          <p class="error error-search-room"></p>
+        </form>
+        <div class="invite__search-result" id="invite-search-result"></div>
+      </div>
+    </div>
+
+    <!--create room-->
+    <div class="createRoom" id="create-room">
+      <div class="createRoom__content">
+        <i class="fas fa-times createRoom__createRoomClose" onclick="createRoomPopClose()"></i>
+        <h1>Create Your Own Room!!</h1>
+        <form class="createRoom__form" action="/rooms/createroom" method="POST" enctype="multipart/form-data" id="create-room-form">
+          <input type="text" name="name" placeholder="Your Room Name..." />
+          <p class="error name-error"></p>
+          <input type="file" name="roomlogo" />
+          <p class="error roomlogo-error"></p>
+          <p class="error common-error"></p>
+          <button type="submit" value="submit">CREATE !!</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="display-notification" id="dis-noti">
+      <div class="display-notification-content" id="dis-noti-content"></div>
+    </div>
+
+    <div class="display-room-members" id="room-members">
+      <div class="display-members-content" id="members-content"></div>
+    </div>
+
+    <!-- import socket io client from cdn -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+      const socket = io("<%= process.env.APP_URL %>");
+      const loggedInUserId = "<%= user._id %>";
+      let openRoomCode;
+      const userRooms = "<%= userRooms %>";
+      const warnToast = Toastify({
+        text: "Something Going wrong...",
+        duration: 2000,
+      });
+      const loggedsuccessToast = Toastify({
+        text: "Logged Out successfully...",
+        duration: 2000,
+      });
+      const createRoomsuccessToast = Toastify({
+        text: "Room successfully Created...",
+        duration: 2000,
+      });
+      const addedRoomsuccessToast = Toastify({
+        text: "Successfully Added In the Room...",
+        duration: 2000,
+      });
+      //logout function
+      async function logout() {
+        let response = await fetch("/users/logout", {
+          method: "GET",
+        });
+        const result = await response.json();
+        // console.log(result);
+        if (result.status === "success") {
+          loggedsuccessToast.showToast();
+          setTimeout(() => {
+            location.assign(`/`).reload(true);
+          }, 1000);
+        } else {
+          warnToast.showToast();
+        }
+      }
+
+      //create room functionalities
+      function createRoomPopUP() {
+        //console.log("hi from createRoom");
+        const createRoom = document.getElementById("create-room");
+        createRoom.style.display = "block";
+        createRoom.style.zIndex = "100";
+      }
+      function createRoomPopClose() {
+        const createRoom = document.getElementById("create-room");
+        createRoom.style.display = "none";
+        createRoom.style.zIndex = "0";
+      }
+      const createRoomForm = document.querySelector("#create-room-form");
+
+      createRoomForm.onsubmit = async function (e) {
+        e.preventDefault();
+
+        const errorPlaceholders = document.querySelectorAll("p.error");
+        for (let i = 0; i < errorPlaceholders.length; i++) {
+          errorPlaceholders[i].style.display = "none";
+        }
+
+        const createRoomData = new FormData(createRoomForm);
+        // console.log(createRoomData);
+        let response = await fetch("/rooms/createroom", {
+          method: "POST",
+          body: createRoomData,
+        });
+        const result = await response.json();
+
+        if (result.errors) {
+          // console.log(result.errors);
+          Object.keys(result.errors).forEach((fieldName) => {
+            // console.log(result.errors[fieldName].msg + fieldName);
+            const errorPlaceholder = document.querySelector(`.${fieldName}-error`);
+            errorPlaceholder.textContent = result.errors[fieldName].msg;
+            errorPlaceholder.style.display = "block";
+          });
+        } else {
+          // console.log("success");
+          const x = result.newRoom;
+          const newRoomHTML = `
+          <div class="dashboard__room-info" id="room-${x._id}" onclick="openInboxModal('${x._id}')">
+            <div class="dashboard__room-details">
+              <div class="dashboard__room-logo">
+                <img src="/images/rooms/${x.roomlogo}" class="dashboard__room-photo" alt="user photo of" />
+              </div>
+              <div class="dashboard__room-head">
+                <h4>${x.name}</h4>
+                <div class="dashboard__room__head-info">
+                  <p>class text</p>
+                  <p>${moment(x.updatedAt).fromNow()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          `;
+          document.querySelector("#room-names").insertAdjacentHTML("afterbegin", newRoomHTML);
+          createRoomsuccessToast.showToast();
+
+          setTimeout(() => {
+            createRoomPopClose();
+          }, 2000);
+        }
+      };
+
+      //addnewUser in the existend room
+      const addNewMemberForm = document.querySelector("#add-new-room-member");
+      addNewMemberForm.onsubmit = async function (e) {
+        e.preventDefault();
+        const errorPlaceholder = document.querySelector(".common-error");
+        errorPlaceholder.style.display = "none";
+
+        //const addNewMemberFormData = new FormData(this);
+        const code = document.getElementById("roomCode").value;
+        let formbody = [];
+        let encodedKey = encodeURIComponent("roomCode");
+        let encodedValue = encodeURIComponent(code);
+        formbody.push(encodedKey + "=" + encodedValue);
+        formbody = formbody.join("&");
+        // console.log(formbody);
+
+        let response = await fetch("/rooms/addnewUserInRoom", {
+          method: "POST",
+          body: formbody,
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          },
+        });
+
+        const result = await response.json();
+
+        if (result.status === "Invalid") {
+          const errorPlaceholder = document.querySelector(".common-error");
+          errorPlaceholder.textContent = result.msg;
+          errorPlaceholder.style.display = "block";
+        } else {
+          const x = result.newRoom;
+          const newRoomHTML = `
+          <div class="dashboard__room-info" id="room-${x._id}" onclick="openInboxModal('${x._id}')">
+            <div class="dashboard__room-details">
+              <div class="dashboard__room-logo">
+                <img src="/images/rooms/${x.roomlogo}" class="dashboard__room-photo" alt="user photo of" />
+              </div>
+              <div class="dashboard__room-head">
+                <h4 id="room-name-${x._id}">${x.name}</h4>
+                <div class="dashboard__room__head-info">
+                  <p id="room-slug-${x._id}">class text</p>
+                  <p id="room-updateTime-${x._id}">${moment(x.updatedAt).fromNow()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          `;
+          document.getElementById("roomCode").value = "";
+          document.querySelector("#room-names").insertAdjacentHTML("afterbegin", newRoomHTML);
+          addedRoomsuccessToast.showToast();
+        }
+      };
+
+      //make a message
+      ///message,result.user._id
+
+      function makeMessage(message, loggedInUserId) {
+        let attachment = '<div class="dashboard__message-attachment">';
+
+        if (message.attachment && message.attachment.length > 0) {
+          message.attachment.forEach((pic) => {
+            attachment += `<img src="/images/attachments/${pic}" /> `;
+          });
+        }
+        attachment += "</div>";
+        let messageHtml = "",
+          finalMsg = "";
+
+        // console.log(message.senderId);
+        // console.log(result.user._id);
+        const senderName = message.senderId.id === loggedInUserId ? "" : message.senderId.name;
+
+        messageHtml += `
+          <div class="dashboard__message-senderPic">
+            <img src="/images/users/${message.senderId.photo}" class="dashboard__sender-photo" alt="user photo of" />
+          </div>
+          <div class="dashboard__message-details">
+            <p class="dashboard__message-username">${senderName}</p>
+            <p class="dashboard__message-time">${moment(message.createdAt).fromNow()}</p>
+        `;
+
+        if (message.text) {
+          messageHtml += `
+          <div class="dashboard__message-box">
+              <p>${message.text}</p>
+            </div>
+            ${attachment}
+          </div>
+          `;
+        } else {
+          messageHtml += `
+            ${attachment}
+          </div>
+          `;
+        }
+
+        if (message.senderId.id === loggedInUserId) {
+          finalMsg = `
+            <div class="dashboard__messsage__content active-message">
+              ${messageHtml}
+            </div>`;
+        } else {
+          finalMsg = `
+            <div class="dashboard__messsage__content">
+              ${messageHtml}
+            </div>`;
+        }
+
+        return finalMsg;
+      }
+
+      //opening inbox modal ;
+      async function openInboxModal(roomId) {
+        // console.log(roomId);
+        openRoomCode = roomId;
+        const currentRoom = document.getElementById(`room-${roomId}`);
+        const chatbox = document.getElementById("chatbox");
+        let room_placeholder = document.querySelector(".dashboard__search_result");
+        room_placeholder.style.display = "none";
+
+        const previousChatbox = document.querySelector(".active-room");
+        if (previousChatbox) previousChatbox.classList.remove("active-room");
+
+        chatbox.style.display = "block";
+
+        currentRoom.classList.add("active-room");
+        // console.log(roomId);
+        let response = await fetch(`/rooms/${roomId}`, {
+          method: "GET",
+        });
+        const result = await response.json();
+        //console.log(result);
+        // console.log(result.user);
+        if (result.status === "success") {
+          chatbox.innerHTML = "";
+          const HTML = `
+            <i class="fas fa-arrow-left left-arrow" id="back-arrow"></i>
+            <div class="dashboard__chatbox-header">
+              <div class="dashboard__chatbox-name">
+                <img src="/images/rooms/${result.room.roomlogo}" class="dashboard__room-photo" alt="user photo of" />
+                <h4>${result.room.name}</h4>
+              </div>
+              <div class="dashboard__chatbox-info">
+                <i class="fas fa-plus-circle" onclick="sendRequestPopUP()"></i>
+                <i class="fas fa-info-circle" onclick="showMembersPop()"></i>
+              </div>
+            </div>
+
+            <div class="dashboard__chatbox-messages" id="chat-message-list">
+              <p>Conversation has not started yet...</p>
+            </div>
+
+            <div class="dashboard__chatbox-form">
+              <form class="dashboard__chatbox-form-content" id="chat-form" method="POST" enctype="multipart/form-data">
+                <input type="text" class="text-input" name="message" placeholder="type your message..." />
+                <input type="file" multiple  class="file-input" id="attachment" name="attachment" />
+                <label for="attachment"><i class="fas fa-paperclip"></i></label>
+                <button type="sumit"><i class="fas fa-paper-plane"></i></button>
+              </form>
+            </div>
+            `;
+
+          chatbox.innerHTML += HTML;
+
+          const chatList = document.getElementById("chat-message-list");
+
+          //changing clicked room colors....
+          const messageRoomSlug = document.getElementById(`room-slug-${roomId}`);
+          const messageRoomUpdateTime = document.getElementById(`room-updateTime-${roomId}`);
+          messageRoomSlug.style.color = "Black";
+          messageRoomSlug.style.fontWeight = "400";
+          messageRoomUpdateTime.style.color = "Black";
+          messageRoomUpdateTime.style.fontWeight = "400";
+
+          //adding messages on the list
+          if (result.messages.length > 0) {
+            let allMessage = "";
+            // console.log(result.messages);
+
+            result.messages.forEach((message) => {
+              ///photo,name,time,userId,senderId
+              //allMessage+=finalMsg;
+              //chatList.append(finalMsg);
+
+              allMessage += makeMessage(message, result.user._id);
+            });
+
+            chatList.innerHTML = allMessage;
+            chatList.scrollTop = chatList.scrollHeight - chatList.clientHeight;
+          } else if (result.messages.length === 0) {
+            chatList.innerHTML = `<div class="dashboard__messsage__content"></div>`;
+          }
+
+          const backArrow = document.getElementById("back-arrow");
+          backArrow.addEventListener("click", () => {
+            chatbox.style.display = "none";
+            currentRoom.classList.remove("active-room");
+          });
+
+          //message sending form building
+          const chatform = document.querySelector("#chat-form");
+          const messageContainer = document.querySelector("#chat-message-list");
+
+          chatform.onsubmit = async function (event) {
+            event.preventDefault();
+            const sendMessageFailureToast = Toastify({
+              text: "Error sending message",
+              duration: 1000,
+            });
+
+            const chatformData = new FormData(this);
+            chatformData.append("roomId", result.room._id);
+            chatformData.append("senderId", result.user._id);
+
+            let response = await fetch("/inbox/message", {
+              method: "POST",
+              body: chatformData,
+            });
+
+            const sendMessageResult = await response.json();
+
+            if ((sendMessageResult.status = "success")) {
+              chatform.reset();
+            } else {
+              sendMessageFailureToast.showToast();
+            }
+          };
+
+          ///socekt initialization
+
+          //console.log(result.user.rooms);
+
+          socket.on("new_message", (message) => {
+            let attachment = '<div class="dashboard__message-attachment">';
+            // console.log(loggedInUserId);
+            if (userRooms.includes(message.roomId)) {
+              // append the inoming message to message area as last item
+              const chatli = document.querySelector("#chat-message-list");
+              chatli.innerHTML += makeMessage(message, result.user._id);
+              chatli.scrollTop = chatli.scrollHeight - chatli.clientHeight;
+            }
+          });
+        }
+      }
+
+      //room search
+
+      let typingTimer;
+      const doneTypingInterval = 500;
+      const input = document.querySelector("input#room");
+      let room_placeholder = document.querySelector(".dashboard__search_result");
+      room_placeholder.style.display = "none";
+
+      //on keyup start the countdown
+      input.addEventListener("keyup", function () {
+        clearTimeout(typingTimer);
+        room_placeholder.style.display = "none";
+
+        if (input.value) {
+          typingTimer = setTimeout(searchRooms, doneTypingInterval);
+        }
+      });
+
+      //on keydown clear the countDown
+      input.addEventListener("keydown", function () {
+        clearTimeout(typingTimer);
+      });
+
+      //send the request for search
+      async function searchRooms() {
+        let response = await fetch("/rooms/search", {
+          method: "POST",
+          body: JSON.stringify({
+            roomName: input.value,
+          }),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        });
+
+        //get the reposnse
+        let result = await response.json();
+        let html = "";
+        //console.log(result);
+        if (result.status === "success") {
+          result.rooms.forEach((room) => {
+            html += `
+            <div class="dashboard__result-room" id="${room._id}" onclick = "openInboxModal('${room._id}')">
+              <div class="dashboard__room-logo">
+                <img src="/images/rooms/${room.roomlogo}" class="dashboard__room-photo" alt="user photo of" />
+              </div>
+              <div class="dashboard__room-head">
+                <h4>${room.name}</h4>
+              </div>
+            </div>
+            `;
+          });
+          //console.log(html);
+          if (html) {
+            room_placeholder.innerHTML = html;
+            room_placeholder.style.display = "block";
+          } else {
+            html = `<p style="color:red">no room with this name...</p>`;
+            room_placeholder.innerHTML = html;
+            room_placeholder.style.display = "block";
+          }
+        } else {
+          html = `<p style="color:red">unkwon error...</p>`;
+          room_placeholder.innerHTML = html;
+          room_placeholder.style.display = "block";
+        }
+
+        // console.log(result);
+      }
+
+      //sending joing invites
+      async function sendInvites(userI) {
+        // console.log(openRoomCode);
+        // console.log(userI);
+        let response = await fetch("/users/invite", {
+          method: "POST",
+          body: JSON.stringify({
+            roomCode: openRoomCode,
+            userCode: userI,
+          }),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        });
+
+        let result = await response.json();
+
+        if (result.status === "success") {
+          const showInviteSuccessfully = Toastify({
+            text: "Successfully Invitation sent...",
+            duration: 2000,
+          });
+          showInviteSuccessfully.showToast();
+          const inviteSenderUserHtml = document.getElementById(`search-user-${result.user}`);
+          inviteSenderUserHtml.style.display = "none";
+          document.querySelector("input#user").value = "";
+        } else {
+          warnToast.showToast();
+        }
+      }
+
+      //sending requests --first searching
+
+      const inviteModel = document.getElementById("send-room-invitations");
+      function sendRequestPopUP() {
+        inviteModel.style.display = "block";
+      }
+      function inviteRoomClosePopClose() {
+        inviteModel.style.display = "none";
+        const inputUserResultPlaceHolder = document.getElementById("invite-search-result");
+        inputUserResultPlaceHolder.innerHTML = "";
+        document.querySelector("input#user").value = "";
+      }
+
+      const inputUserSearch = document.querySelector("input#user");
+      const inputUserResultPlaceHolder = document.getElementById("invite-search-result");
+      let userTypingTimer;
+
+      inputUserSearch.addEventListener("keyup", function () {
+        clearTimeout(userTypingTimer);
+        inputUserResultPlaceHolder.style.display = "none";
+
+        if (inputUserSearch.value) {
+          userTypingTimer = setTimeout(searchUsers, doneTypingInterval);
+        }
+      });
+      inputUserSearch.addEventListener("keydown", function () {
+        clearTimeout(userTypingTimer);
+      });
+
+      //get userSearch Request
+      async function searchUsers() {
+        // console.log(inputUserSearch.value);
+        let response = await fetch(`/users/search/${openRoomCode}`, {
+          method: "POST",
+          body: JSON.stringify({
+            userName: inputUserSearch.value,
+          }),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        });
+
+        const userSearchResult = await response.json();
+
+        if (userSearchResult.status === "success") {
+          let html = "";
+          userSearchResult.users.forEach((user) => {
+            html += `
+            <div class="invite__search-result-content" id="search-user-${user._id}">
+              <div class="invite__search-result-info">
+                <img src="/images/users/${user.photo}" class="dashboard__room-photo" alt="" />
+                <h4>${user.name}</h4>
+              </div>
+              <button type="button" class="invite-button" onclick="sendInvites('${user._id}')">SEND INVITATION</button>
+            </div>
+            `;
+          });
+          //console.log(html);
+          if (html) {
+            inputUserResultPlaceHolder.innerHTML = html;
+            inputUserResultPlaceHolder.style.display = "block";
+          } else {
+            html = `<p style="color:red">No User to Invite...</p>`;
+            inputUserResultPlaceHolder.innerHTML = html;
+            inputUserResultPlaceHolder.style.display = "block";
+          }
+        } else {
+          html = `<p style="color:red">unkwon error...</p>`;
+          inputUserResultPlaceHolder.innerHTML = html;
+          inputUserResultPlaceHolder.style.display = "block";
+        }
+      }
+
+      ///getting notification//
+      async function openNotification() {
+        const notificationDiv = document.getElementById("dis-noti");
+        notificationDiv.style.display = "block";
+
+        document.getElementById("dis-noti-content").innerHTML = "";
+
+        let response = await fetch("/users/notifications", {
+          method: "GET",
+        });
+        const result = await response.json();
+        if (result.status === "success" && result.notifications.length) {
+          let container = document.getElementById("dis-noti-content");
+          container.innerHTML = `
+             <i class="fas fa-times createRoom__createRoomClose" onclick="closeNotifications()"></i>
+             <h1>Your Room Invites</h1>
+          `;
+          result.notifications.forEach((invites) => {
+            container.innerHTML += `
+            <div class="joining-content" id="not-${invites._id}">
+              <div class="joining-room-info" >
+                <img src="/images/rooms/${invites.photo}" alt="" />
+                <h4>${invites.name}</h4>
+              </div>
+              <div class="joining-buttons">
+                <button onclick="joinRoomInfo('${invites.roomId}','${invites._id}')">JOIN</button>
+                <button onclick="deleteRoomInfo('${invites.roomId}','${invites._id}')" class="delete">DELETE</button>
+              </div>
+            </div>
+            `;
+          });
+        } else {
+          let container = document.getElementById("dis-noti-content");
+          container.innerHTML = "";
+          container.innerHTML += `
+          <i class="fas fa-times createRoom__createRoomClose" onclick="closeNotifications()"></i>
+          <h1>Your Room Invites</h1>
+          <p>No invitation to Show</p>`;
+        }
+      }
+      function closeNotifications() {
+        const notificationDiv = document.getElementById("dis-noti");
+        notificationDiv.style.display = "none";
+      }
+
+      async function deleteRoomInfo(roomId, notId) {
+        // console.log(roomId, notId);
+        let resposne = await fetch(`/users/notifications/${notId}`, {
+          method: "DELETE",
+        });
+        const result = await resposne.json();
+        if (result.status === "success") {
+          const removeSuc = Toastify({
+            text: "Successfully Remove",
+            duration: 5000,
+          });
+          addedRoomsuccessToast.showToast();
+          const doc = document.getElementById(`not-${notId}`);
+          doc.style.display = "none";
+        } else {
+          warnToast.showToast();
+        }
+      }
+
+      async function joinRoomInfo(roomId, notId) {
+        let resposne = await fetch(`/users/notifications/${roomId}`, {
+          method: "POST",
+          body: JSON.stringify({
+            roomCode: roomId,
+          }),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        });
+        const result = await resposne.json();
+
+        if (result.status === "success") {
+          addedRoomsuccessToast.showToast();
+          const doc = document.getElementById(`not-${notId}`);
+          doc.style.display = "none";
+          location.reload();
+        } else {
+          warnToast.showToast();
+        }
+      }
+
+      //getuser
+      async function getme() {
+        let resposne = await fetch("/users/loggedInUserId", {
+          method: "GET",
+        });
+        const result = await resposne.json();
+
+        if (result.status === "success") {
+          let htmt = "";
+
+          result.user.rooms.forEach((room) => {
+            html += ``;
+          });
+        }
+      }
+
+      ///showing group members...
+      async function showMembersPop() {
+        document.getElementById("room-members").style.display = "block";
+        let response = await fetch(`/rooms/members/${openRoomCode}`, {
+          method: "GET",
+        });
+        let result = await response.json();
+        // console.log(result.room.participants);
+
+        if (result.status === "success") {
+          document.getElementById("members-content").innerHTML = "";
+          let html = `
+              <i class="fas fa-times createRoom__createRoomClose" onclick="closeMembers()"></i>
+              <h1>Room Members</h1>
+              <p>Invitation-Code: <input type="text" id="room-invi-code"/> <button><i class="far fa-copy" onclick="selectRoomCode()"></i></button></p>
+
+          `;
+          result.room.participants.forEach((info) => {
+            html += `
+            <div class="display-memebers">
+              <div class="members-info">
+                <img src="/images/users/${info.photo}" alt="" />
+                <h4>${info.name}"</h4>
+              </div>
+              <p>joined at:${moment(info.createdAt).fromNow()}"</p>
+            </div>
+            `;
+          });
+          document.getElementById("members-content").innerHTML += html;
+          document.getElementById("room-invi-code").setAttribute("value", result.room.roomCode);
+          //console.log("hi");
+        } else {
+          //console.log("hello");
+          warnToast.showToast();
+        }
+      }
+      //invite code selecting
+      function selectRoomCode() {
+        document.getElementById("room-invi-code").select();
+        document.execCommand("copy");
+
+        const showCopy = Toastify({
+          text: "Inivitation Code Copied In the ClipBoad",
+          duration: 3000,
+        });
+
+        showCopy.showToast();
+      }
+      function closeMembers() {
+        document.getElementById("room-members").style.display = "none";
+      }
+
+      //sending join invites
+
+      ////sockets
+
+      socket.on("new_message", (message) => {
+        if (userRooms.includes(message.roomId)) {
+          const roomNames = document.getElementById("room-names");
+          const messageRoom = document.getElementById(`room-${message.roomId}`);
+          const messageRoomName = document.getElementById(`room-name-${message.roomId}`);
+          const messageRoomSlug = document.getElementById(`room-slug-${message.roomId}`);
+          const messageRoomUpdateTime = document.getElementById(`room-updateTime-${message.roomId}`);
+
+          roomNames.removeChild(messageRoom);
+
+          roomNames.insertBefore(messageRoom, roomNames.firstChild);
+          messageRoom.style.color = "Black";
+          messageRoomSlug.style.color = "red";
+          messageRoomSlug.style.fontWeight = "Bold";
+          messageRoomSlug.textContent = `Msg: ${message.slug}`;
+          messageRoomUpdateTime.style.color = "red";
+          messageRoomUpdateTime.style.fontWeight = "Bold";
+          messageRoomUpdateTime.textContent = `${moment(message.updatedAt).fromNow()}`;
+        }
+      });
+
+      socket.on("new_invite", (invite) => {
+        if (invite.user === loggedInUserId) {
+          const bell = document.getElementById("bell");
+          bell.classList.remove("in-active-menubutton");
+          bell.classList.add("active-menubutton");
+
+          const incomingInviteToast = Toastify({
+            text: "New Room Invitation Comes For you!!!",
+            duration: 5000,
+          });
+          incomingInviteToast.showToast();
+        }
+      });
+    </script>
+  </body>
+</html>

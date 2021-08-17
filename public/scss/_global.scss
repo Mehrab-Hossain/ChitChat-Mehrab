@@ -1,0 +1,200 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;1,100;1,200;1,300;1,400;1,500;1,600&display=swap");
+html {
+  font-size: 100%;
+  box-sizing: border-box;
+}
+*,
+*::after,
+*::before {
+  box-sizing: inherit;
+}
+.sticky {
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 300;
+  font-size: $font-med;
+  line-height: 1.3;
+  overflow-x: hidden;
+  background: #f6f5f7;
+  height: 100vh;
+}
+ul,
+li {
+  padding: 0;
+  margin: 0;
+}
+h2 {
+  margin-top: 0px;
+  margin-bottom: 1rem;
+}
+h1 {
+  color: #333;
+  font-weight: 500;
+  font-size: 2.25rem;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.1rem;
+  letter-spacing: 0.03125rem;
+}
+p.error {
+  color: red;
+  font-size: 0.7rem;
+  line-height: 1rem;
+  display: none;
+}
+span {
+  font-size: 0.75rem;
+}
+
+a,
+a:visited,
+a:hover {
+  color: #333;
+  font-size: 14px;
+  text-decoration: none;
+  margin: 15px 0;
+}
+
+// Spacing
+
+button.custom {
+  border-radius: 20px;
+  border: 1px solid #ff4b2b;
+  background-color: #ff4b2b;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 12px 45px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: transform 80ms ease-in;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+button:focus {
+  outline: none;
+}
+
+button.ghost {
+  background-color: transparent;
+  border-color: #ffffff;
+}
+span {
+  font-weight: 400;
+}
+//FLexx
+.flex {
+  display: flex;
+
+  &-jc-sb {
+    justify-content: space-between;
+  }
+
+  &-jc-c {
+    justify-content: center;
+  }
+
+  &-ai-c {
+    align-items: center;
+  }
+}
+//button
+.active-bt {
+  background: #ff4b2b;
+  color: white;
+}
+// .in-active-form {
+//   display: none;
+// }
+.active-menubutton {
+  i {
+    color: #ff4b2b;
+  }
+}
+.in-active-menubutton {
+  i {
+    color: #ffffff;
+  }
+}
+.active-room {
+  border-left: 0.325rem solid #ff4b2b;
+  background: #fefeff;
+  background: -webkit-linear-gradient(to right, #fefeff, #ebf4fb);
+  background: linear-gradient(to right, #fefeff, #ebf4fb);
+}
+.active-chatbox {
+  .dashboard .dashboard__chatbox {
+    transform: translateX(0%);
+  }
+}
+.active-message {
+  margin-left: auto;
+  justify-content: flex-end;
+  .dashboard__message-box {
+    color: white;
+    background-color: #ff4b2b;
+  }
+}
+// Visibility
+.hide-for-mobile {
+  @include breakpoint-down(medium) {
+    display: none;
+    transform: translateX(100%);
+  }
+}
+
+.hide-for-desktop {
+  @include breakpoint-up(large) {
+    display: none;
+  }
+}
+.hide-dekstop-front {
+  @include breakpoint-down(xsmall) {
+    display: none;
+  }
+}
+//wxtra
+.box__shadow {
+  -webkit-box-shadow: 5px 4px 15px 0px #000000;
+  box-shadow: 5px 4px 15px 0px #000000;
+}
+
+//scroll bar
+
+::-webkit-scrollbar {
+  width: 0.5rem;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px rgb(230, 226, 226);
+  border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #dad5d4;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ff4b2b;
+}
