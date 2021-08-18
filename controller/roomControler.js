@@ -31,13 +31,13 @@ async function createRoom(req, res, next) {
     const result = await newRoom.save();
     res.locals.user.rooms.push(result._id);
     await res.locals.user.save();
-    console.log("room succesfully created");
+    // console.log("room succesfully created");
     res.status(200).json({
       status: "success",
       newRoom: result,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       status: "fail",
       error,
@@ -98,7 +98,7 @@ async function addNewUserInRoom(req, res, next) {
     await reqRoom.save();
 
     //updating user Room
-    console.log(reqRoom._id);
+    // console.log(reqRoom._id);
 
     user.rooms.push(reqRoom._id);
     await user.save();
@@ -187,7 +187,7 @@ async function getRoom(req, res, next) {
   try {
     const room = await Room.findById(reqroomId);
     const messages = await Message.find({ roomId: reqroomId });
-    console.log(reqroomId);
+    // console.log(reqroomId);
     if (room) {
       const user = res.locals.user;
       res.status(200).json({
@@ -200,7 +200,7 @@ async function getRoom(req, res, next) {
       throw createError("Room Not find");
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(400).json({
       status: "fail",
       error: "unKown error!",

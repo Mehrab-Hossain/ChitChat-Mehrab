@@ -4,11 +4,11 @@ const { check } = require("express-validator");
 const bodyParser = require("body-parser");
 
 // internal imports
-const { addUser, getUser, isLogin, logout, login, getSearchUsers, sendInvite, getNotifications, notId } = require("../controller/userController");
+const { addUser, getUser, isLogin, logout, login, getSearchUsers, sendInvite, getNotifications, notId, updateUser } = require("../controller/userController");
 const { addNewUserInRoomId } = require("../controller/roomControler");
 const decorateHtmlResponse = require("../middlewares/common/decorateHtmlResponse");
 const { avatarUpload, roomlogoUpload } = require("../middlewares/users/avaterUpload");
-const { addUserValidators, addUserValidationHandler } = require("../middlewares/users/userValidators");
+const { addUserValidators, addUserValidationHandler, updateMeValidator } = require("../middlewares/users/userValidators");
 
 const router = express.Router();
 
@@ -16,6 +16,7 @@ const router = express.Router();
 
 // add user
 router.post("/signUp", avatarUpload, addUserValidators, addUserValidationHandler, addUser);
+router.post("/updateme", isLogin, avatarUpload, updateMeValidator, addUserValidationHandler, updateUser);
 router.post("/signIn", login);
 router.post("/search/:id", getSearchUsers);
 router.post("/invite", isLogin, sendInvite);

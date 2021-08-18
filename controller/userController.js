@@ -314,8 +314,9 @@ async function getNotifications(req, res, next) {
   }
 }
 
+///notfication delete
 async function notId(req, res, next) {
-  console.log(req.params.id);
+  // console.log(req.params.id);
   if (!res.locals.user) {
     res.render("index");
   } else {
@@ -343,6 +344,74 @@ async function notId(req, res, next) {
   }
 }
 
+async function updateUser(req, res, next) {
+  const user = res.locals.user;
+  if (!res.locals.user) {
+    res.render("index");
+  } else {
+    try {
+      const user = await People.findOne({ email: res.locals.user.email }).select("+password");
+      /// console.log(user);
+      if (!user || !(await user.correctPassword(req.body.password, user.password))) {
+        // console.log("hello");
+        res.json({
+          errors: {
+            common: {
+              msg: "Password is In Correct",
+            },
+          },
+        });
+      }
+    } catch (error) {
+      // console.log(error);
+      res.json({
+        errors: {
+          common: {
+            msg: "Unkown Error",
+          },
+        },
+      });
+    }
+  }
+
+  let coun = 0;
+  if (req.files && req.files.length > 0) {
+    user.photo = req.files[0].filename;
+    coun += 1;
+  }
+  if (req.body.name) {
+    user.name = req.body.name;
+    coun += 1;
+  }
+
+  if (coun === 0) {
+    res.json({
+      errors: {
+        common: {
+          msg: "Please provide info to update",
+        },
+      },
+    });
+  } else {
+    try {
+      user.save();
+      // console.log("suc");
+      res.status(200).json({
+        status: "success",
+      });
+    } catch (error) {
+      // console.log(error);
+      res.json({
+        errors: {
+          common: {
+            msg: "Unknown error occured!",
+          },
+        },
+      });
+    }
+  }
+}
+
 module.exports = {
   addUser,
   getUser,
@@ -353,4 +422,5 @@ module.exports = {
   sendInvite,
   getNotifications,
   notId,
+  updateUser,
 };

@@ -3,6 +3,7 @@ const { check, validationResult } = require("express-validator");
 const createError = require("http-errors");
 const path = require("path");
 const { unlink } = require("fs");
+const { isLogin } = require("../../controller/userController");
 
 // internal imports
 const User = require("../../Models/peopleModel");
@@ -32,6 +33,7 @@ const addUserValidationHandler = function (req, res, next) {
   const errors = validationResult(req);
 
   const mappedErrors = errors.mapped();
+  //console.log(mappedErrors);
 
   if (Object.keys(mappedErrors).length === 0) {
     next();
@@ -79,9 +81,12 @@ const addRoomValidationHandler = function (req, res, next) {
   }
 };
 
+const updateMeValidator = [check("password").isStrongPassword().withMessage("Please Give Password in Correct format to Confirm Update!")];
+
 module.exports = {
   addUserValidators,
   addUserValidationHandler,
   addRoomValidators,
   addRoomValidationHandler,
+  updateMeValidator,
 };

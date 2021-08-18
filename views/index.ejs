@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon", href="/favicon.png", type="image/png">
+    <link rel="shortcut icon" , href="/favicon.png" , type="image/png" />
     <link rel="stylesheet" href="/dist/toastify.css" />
     <link rel="stylesheet" href="/dist/style.css" />
     <script src="/js/toastify.js"></script>
@@ -132,7 +132,6 @@
           // errors
           Object.keys(result.errors).forEach((fieldName) => {
             // add error class to all inputs
-            console.log(result.errors[fieldName].msg);
             formSignUp[fieldName].classList.add("error");
             // set all error placeholders (p tag) textContent
             const errorPlaceholder = document.querySelector(`.${fieldName}-error`);
